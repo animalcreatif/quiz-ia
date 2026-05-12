@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quick Test IA — IALS</title>
+<meta name="description" content="Évalue ton niveau en IA générative en 10 questions. Par Nathalie Dupuy, IALS." />
+<meta property="og:title" content="Quick Test IA — IALS" />
+<meta property="og:description" content="10 questions, 2 minutes, ton niveau réel en IA." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   CONFIG — À REMPLIR PAR NATHALIE
+   ========================================================================== */
+/*
+   1) WEBHOOK_URL : URL de ton scénario Make ou n8n qui reçoit le JSON
+      et crée la ligne dans Notion (CRM Leads Quiz IA).
+   2) Si tu n'as pas encore branché Make/n8n, laisse "" et le formulaire
+      stockera les réponses en console pour test.
+*/
+/* Cette config est dupliquée plus bas en JS. Cherche : WEBHOOK_URL */
+
+:root {
+  --noir: #0a0a0a;
+  --noir-soft: #141414;
+  --rose: #e8b4b8;
+  --rose-dim: #c89498;
+  --blanc-casse: #f5efe6;
+  --blanc-casse-dim: rgba(245, 239, 230, 0.6);
+  --border: rgba(232, 180, 184, 0.2);
+  --transition: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--noir);
+  color: var(--blanc-casse);
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(232, 180, 184, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(232, 180, 184, 0.05), transparent 40%);
+}
+
+/* ========== Header ========== */
+.header {
+  padding: 28px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  color: var(--blanc-casse);
+}
+
+.brand span { color: var(--rose); }
+
+.brand-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blanc-casse-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ========== Conteneur principal ========== */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.container {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* ========== Écrans (intro, lead, quiz, result) ========== */
+.screen {
+  display: none;
+  animation: fadeIn 0.5s var(--transition);
+}
+
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Intro ========== */
+.intro h1 {
+  font-weight: 900;
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.intro h1 .accent { color: var(--rose); }
+
+.intro .subtitle {
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 400;
+  color: var(--blanc-casse-dim);
+  margin-bottom: 40px;
+  max-width: 560px;
+  line-height: 1.4;
+}
+
+.intro .stats {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat .num {
+  font-weight: 900;
+  font-size: 36px;
+  color: var(--rose);
+  line-height: 1;
+}
+
+.stat .lbl {
+  font-size: 13px;
+  color: var(--blanc-casse-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* ========== Boutons ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--rose);
+  color: var(--noir);
+  border: none;
+  padding: 18px 32px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s var(--transition);
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--blanc-casse);
+  transform: translateX(4px);
+}
+
+.btn .arrow {
+  transition: transform 0.2s var(--transition);
+}
+
+.btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--blanc-casse);
+  border: 1px solid var(--rose);
+}
+
+.btn-ghost:hover {
+  background: var(--rose);
+  color: var(--noir);
+}
+
+/* ========== Formulaire lead ========== */
+.lead-screen h2 {
+  font-weight: 900;
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.lead-screen .lead-sub {
+  font-size: 17px;
+  color: var(--blanc-casse-dim);
+  margin-bottom: 40px;
+  max-width: 520px;
+}
+
+.field {
+  margin-bottom: 24px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blanc-casse-dim);
+  margin-bottom: 8px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  color: var(--blanc-casse);
+  font-family: inherit;
+  font-size: 18px;
+  outline: none;
+  transition: border-color 0.2s var(--transition);
+}
+
+.field input:focus,
+.field select:focus {
+  border-bottom-color: var(--rose);
+}
+
+.field input::placeholder {
+  color: rgba(245, 239, 230, 0.3);
+}
+
+.field select option {
+  background: var(--noir);
+  color: var(--blanc-casse);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 640px) {
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* ========== Cartes de profil ========== */
+.profil-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .profil-choices { grid-template-columns: 1fr; }
+}
+
+.profil-card {
+  background: var(--noir-soft);
+  border: 1px solid var(--border);
+  padding: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--blanc-casse);
+  text-align: left;
+  transition: all 0.2s var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.profil-card:hover {
+  border-color: var(--rose);
+  transform: translateY(-2px);
+}
+
+.profil-card.selected {
+  border-color: var(--rose);
+  background: rgba(232, 180, 184, 0.08);
+}
+
+.profil-dot {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--rose);
+  transition: background 0.2s var(--transition);
+}
+
+.profil-card.selected .profil-dot {
+  background: var(--rose);
+}
+
+.profil-label {
+  font-weight: 700;
+  font-size: 17px;
+  padding-right: 24px;
+}
+
+.profil-sub {
+  font-size: 13px;
+  color: var(--blanc-casse-dim);
+  line-height: 1.4;
+}
+
+.rgpd {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 32px 0;
+  font-size: 13px;
+  color: var(--blanc-casse-dim);
+  line-height: 1.5;
+}
+
+.rgpd input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--rose);
+  cursor: pointer;
+}
+
+.rgpd label { cursor: pointer; }
+
+.error {
+  color: var(--rose);
+  font-size: 13px;
+  margin-top: 8px;
+  display: none;
+}
+
+.error.visible { display: block; }
+
+/* ========== Quiz ========== */
+.progress-bar {
+  height: 2px;
+  background: rgba(232, 180, 184, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--rose);
+  transition: width 0.4s var(--transition);
+  width: 0%;
+}
+
+.q-number {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rose);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.q-title {
+  font-weight: 900;
+  font-size: clamp(26px, 4vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin-bottom: 32px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.choice {
+  background: var(--noir-soft);
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--blanc-casse);
+  text-align: left;
+  transition: all 0.2s var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.choice:hover {
+  border-color: var(--rose);
+  transform: translateX(4px);
+}
+
+.choice.selected {
+  border-color: var(--rose);
+  background: rgba(232, 180, 184, 0.08);
+}
+
+.choice .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--rose);
+  flex-shrink: 0;
+  transition: background 0.2s var(--transition);
+}
+
+.choice.selected .dot {
+  background: var(--rose);
+}
+
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-back {
+  background: transparent;
+  border: none;
+  color: var(--blanc-casse-dim);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s var(--transition);
+}
+
+.btn-back:hover { color: var(--rose); }
+.btn-back:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ========== Résultat ========== */
+.result-screen .level-tag {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rose);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.result-screen h2 {
+  font-weight: 900;
+  font-size: clamp(40px, 7vw, 80px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 24px;
+}
+
+.result-screen h2 .score-num {
+  color: var(--rose);
+}
+
+.result-screen .result-msg {
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.5;
+  color: var(--blanc-casse);
+  margin-bottom: 40px;
+  max-width: 560px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.score-bar {
+  height: 4px;
+  background: rgba(232, 180, 184, 0.15);
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.score-fill {
+  height: 100%;
+  background: var(--rose);
+  width: 0%;
+  transition: width 1.2s var(--transition);
+}
+
+.score-markers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--blanc-casse-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+/* ========== Footer ========== */
+.footer {
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--blanc-casse-dim);
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.05em;
+}
+
+.footer a {
+  color: var(--rose);
+  text-decoration: none;
+}
+
+/* ========== Loader submit ========== */
+.submitting {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .header { padding: 20px; }
+  .main { padding: 32px 20px; }
+  .footer { padding: 20px; }
+  .intro .stats { gap: 24px; }
+  .stat .num { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">IALS<span>.</span></div>
+  <div class="brand-tag">Quick Test IA</div>
+</header>
+
+<main class="main">
+  <div class="container">
+
+    <!-- ÉCRAN 1 : INTRO -->
+    <section class="screen intro active" id="screen-intro">
+      <h1>Ton niveau réel<br>en IA<span class="accent">.</span></h1>
+      <p class="subtitle">10 questions. 2 minutes. Pas de filtre. Tu sors avec un score, un diagnostic, et une direction.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="num">10</div>
+          <div class="lbl">Questions</div>
+        </div>
+        <div class="stat">
+          <div class="num">2'</div>
+          <div class="lbl">Chrono</div>
+        </div>
+        <div class="stat">
+          <div class="num">3</div>
+          <div class="lbl">Niveaux</div>
+        </div>
+      </div>
+      <button class="btn" onclick="goTo('lead')">Je commence <span class="arrow">→</span></button>
+    </section>
+
+    <!-- ÉCRAN 2 : LEAD -->
+    <section class="screen lead-screen" id="screen-lead">
+      <h2>Avant le test.</h2>
+      <p class="lead-sub">Trois infos. Tu reçois ton score, on garde le contact si tu veux aller plus loin.</p>
+
+      <div class="field">
+        <label for="prenom">Prénom</label>
+        <input type="text" id="prenom" placeholder="Ton prénom" autocomplete="given-name" />
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label>Tu te définis comme</label>
+        <div class="profil-choices" id="profil-choices">
+          <button type="button" class="profil-card" data-profil="creatif">
+            <span class="profil-dot"></span>
+            <span class="profil-label">Créatif·ve</span>
+            <span class="profil-sub">DA, CD, designer, photographe, illustrateur·trice...</span>
+          </button>
+          <button type="button" class="profil-card" data-profil="non-creatif">
+            <span class="profil-dot"></span>
+            <span class="profil-label">Pas créatif·ve</span>
+            <span class="profil-sub">Marketing, ops, RH, juridique, dev, autre...</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="rgpd">
+        <input type="checkbox" id="rgpd" />
+        <label for="rgpd">J'accepte que mes infos soient utilisées par IALS pour me recontacter au sujet des formations. Pas de spam, jamais.</label>
+      </div>
+
+      <div class="error" id="lead-error">Il manque quelque chose. Vérifie le prénom, l'email, ton profil et le consentement.</div>
+
+      <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" onclick="validateLead()">Lancer le test <span class="arrow">→</span></button>
+        <button class="btn-back" onclick="goTo('intro')">← Retour</button>
+      </div>
+    </section>
+
+    <!-- ÉCRAN 3 : QUIZ -->
+    <section class="screen quiz" id="screen-quiz">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="q-number" id="q-number">Question 1 / 10</div>
+      <h2 class="q-title" id="q-title"></h2>
+      <div class="choices" id="choices"></div>
+      <div class="quiz-nav">
+        <button class="btn-back" id="btn-back" onclick="prevQuestion()">← Précédente</button>
+        <button class="btn" id="btn-next" onclick="nextQuestion()" disabled style="opacity:0.4;">Suivante <span class="arrow">→</span></button>
+      </div>
+    </section>
+
+    <!-- ÉCRAN 4 : RÉSULTAT -->
+    <section class="screen result-screen" id="screen-result">
+      <div class="level-tag" id="result-level"></div>
+      <h2>Score <span class="score-num" id="result-score">0</span><span style="color:var(--blanc-casse-dim); font-size:0.5em;"> / 10</span></h2>
+      <div class="score-bar"><div class="score-fill" id="score-fill"></div></div>
+      <div class="score-markers">
+        <span>Débutant</span>
+        <span>Intermédiaire</span>
+        <span>Expert</span>
+      </div>
+      <p class="result-msg" id="result-msg" style="margin-top:32px;"></p>
+      <div class="result-actions" id="result-actions"></div>
+      <button class="btn-back" onclick="restart()">↻ Refaire le test</button>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">
+  IALS · Quick Test IA · Par Nathalie Dupuy · <a href="https://www.linkedin.com/in/nathaliedupuy/" target="_blank" rel="noopener">LinkedIn</a>
+</footer>
+
+<script>
+/* ==========================================================================
+   CONFIG
+   ========================================================================== */
+
+// 👉 Colle ici l'URL de ton webhook Make ou n8n.
+// Tant que cette valeur est vide, les soumissions s'affichent en console pour test.
+const WEBHOOK_URL = "";
+
+// 👉 URL de la page d'accueil IALS pour le CTA formations
+const URL_FORMATIONS = "https://www.nathaliedupuy.com/";
+
+// 👉 URL LinkedIn de Nathalie pour le CTA expert
+const URL_LINKEDIN = "https://www.linkedin.com/in/nathaliedupuy/";
+
+
+/* ==========================================================================
+   QUESTIONS
+   ========================================================================== */
+
+const questions = [
+  {
+    id: "Q1",
+    title: "Ta dernière session ChatGPT, Claude ou Mistral, c'était quand ?",
+    choices: [
+      { label: "Jamais ouvert.", pts: 0 },
+      { label: "Cette semaine.", pts: 2 },
+      { label: "Il y a plusieurs mois.", pts: 1 },
+      { label: "Aujourd'hui, plusieurs fois.", pts: 3 }
+    ]
+  },
+  {
+    id: "Q2",
+    title: "Pour toi, un prompt c'est :",
+    choices: [
+      { label: "Aucune idée.", pts: 0 },
+      { label: "Une discipline avec ses méthodes (R.O.C.K.S.T.A.R., C.A.S.T.E.R., etc.).", pts: 3 },
+      { label: "Une question posée à l'IA.", pts: 1 },
+      { label: "Une instruction structurée avec contexte, rôle, contraintes.", pts: 2 }
+    ]
+  },
+  {
+    id: "Q3",
+    title: "La génération d'image (Midjourney, Flux, Imagen), tu en es où ?",
+    choices: [
+      { label: "J'ai vu passer des choses.", pts: 1 },
+      { label: "Je connais les paramètres avancés : sref, ar, omni...", pts: 3 },
+      { label: "J'ai déjà généré quelques images.", pts: 2 },
+      { label: "Jamais testé.", pts: 0 }
+    ]
+  },
+  {
+    id: "Q4",
+    title: "Une « hallucination » d'IA, c'est :",
+    choices: [
+      { label: "Un phénomène lié à la génération probabiliste des LLM.", pts: 3 },
+      { label: "Quand on prend trop de café avant un prompt.", pts: 0 },
+      { label: "L'IA qui invente une info fausse avec aplomb.", pts: 2 },
+      { label: "Un bug d'affichage.", pts: 1 }
+    ]
+  },
+  {
+    id: "Q5",
+    title: "Tu as déjà créé :",
+    choices: [
+      { label: "Un prompt qui marche pas mal.", pts: 1 },
+      { label: "Rien encore.", pts: 0 },
+      { label: "Un workflow IA complet (Make, n8n, automation).", pts: 3 },
+      { label: "Un GPT custom, un projet Claude, un agent.", pts: 2 }
+    ]
+  },
+  {
+    id: "Q6",
+    title: "La vidéo IA (Veo, Kling, Runway), tu connais :",
+    choices: [
+      { label: "C'est quoi ?", pts: 0 },
+      { label: "J'ai testé un ou plusieurs outils.", pts: 2 },
+      { label: "Je sais structurer un prompt vidéo : caméra, lumière...", pts: 3 },
+      { label: "Oui, j'ai vu des trucs sur LinkedIn, jamais testé.", pts: 1 }
+    ]
+  },
+  {
+    id: "Q7",
+    title: "Si je dis « RAG », tu penses :",
+    choices: [
+      { label: "À un vêtement, mais moche !", pts: 0 },
+      { label: "Retrieval Augmented Generation, je vois.", pts: 2 },
+      { label: "Aucune idée.", pts: 1 },
+      { label: "J'en ai déjà monté un sur mes données.", pts: 3 }
+    ]
+  },
+  {
+    id: "Q8",
+    title: "La propriété intellectuelle face à l'IA générative :",
+    choices: [
+      { label: "Je sais que c'est flou.", pts: 1 },
+      { label: "Je suis les évolutions juridiques de près.", pts: 3 },
+      { label: "Je connais les bases.", pts: 2 },
+      { label: "J'y ai jamais pensé.", pts: 0 }
+    ]
+  },
+  {
+    id: "Q9",
+    title: "Ton usage de l'IA au quotidien :",
+    choices: [
+      { label: "Quelques tâches ponctuelles.", pts: 1 },
+      { label: "Curieux·se mais j'observe.", pts: 0 },
+      { label: "C'est mon métier ou ça structure tout mon travail.", pts: 3 },
+      { label: "Plusieurs heures par semaine, c'est intégré.", pts: 2 }
+    ]
+  },
+  {
+    id: "Q10",
+    title: "Si je te dis « agent IA » :",
+    choices: [
+      { label: "Tu en as déjà construit un.", pts: 3 },
+      { label: "Tu sais qu'un agent exécute des tâches multi-étapes.", pts: 2 },
+      { label: "Tu penses à James Bond.", pts: 0 },
+      { label: "Tu en as entendu parler.", pts: 1 }
+    ]
+  }
+];
+
+/* ==========================================================================
+   STATE
+   ========================================================================== */
+
+const state = {
+  lead: {},
+  answers: {}, // { Q1: { label, pts }, ... }
+  current: 0
+};
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screenId).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ==========================================================================
+   LEAD VALIDATION
+   ========================================================================== */
+
+function validateLead() {
+  const prenom = document.getElementById('prenom').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const profil = document.querySelector('.profil-card.selected')?.dataset.profil || "";
+  const rgpd = document.getElementById('rgpd').checked;
+  const err = document.getElementById('lead-error');
+
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!prenom || !emailOk || !profil || !rgpd) {
+    err.classList.add('visible');
+    return;
+  }
+
+  err.classList.remove('visible');
+  state.lead = { prenom, email, profil };
+  state.current = 0;
+  goTo('quiz');
+  renderQuestion();
+}
+
+// Sélection des cartes de profil
+document.querySelectorAll('.profil-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.profil-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+/* ==========================================================================
+   QUIZ
+   ========================================================================== */
+
+function renderQuestion() {
+  const q = questions[state.current];
+  document.getElementById('q-number').textContent = `Question ${state.current + 1} / ${questions.length}`;
+  document.getElementById('q-title').textContent = q.title;
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+
+  q.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    if (state.answers[q.id] && state.answers[q.id].label === c.label) {
+      btn.classList.add('selected');
+    }
+    btn.innerHTML = `<span class="dot"></span><span>${c.label}</span>`;
+    btn.onclick = () => selectChoice(q.id, c, btn);
+    choicesEl.appendChild(btn);
+  });
+
+  // Progress bar
+  const progress = ((state.current) / questions.length) * 100;
+  document.getElementById('progress-fill').style.width = progress + '%';
+
+  // Boutons nav
+  const btnBack = document.getElementById('btn-back');
+  btnBack.disabled = state.current === 0;
+
+  const btnNext = document.getElementById('btn-next');
+  const hasAnswer = !!state.answers[q.id];
+  btnNext.disabled = !hasAnswer;
+  btnNext.style.opacity = hasAnswer ? '1' : '0.4';
+  btnNext.querySelector('span:not(.arrow)') ?
+    btnNext.firstChild.textContent = (state.current === questions.length - 1 ? 'Voir mon score ' : 'Suivante ') : null;
+  // Simpler : rewrite full content
+  btnNext.innerHTML = (state.current === questions.length - 1 ? 'Voir mon score ' : 'Suivante ') + '<span class="arrow">→</span>';
+}
+
+function selectChoice(qId, choice, btn) {
+  state.answers[qId] = { label: choice.label, pts: choice.pts };
+  document.querySelectorAll('.choice').forEach(c => c.classList.remove('selected'));
+  btn.classList.add('selected');
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = false;
+  btnNext.style.opacity = '1';
+}
+
+function nextQuestion() {
+  if (state.current < questions.length - 1) {
+    state.current++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function prevQuestion() {
+  if (state.current > 0) {
+    state.current--;
+    renderQuestion();
+  }
+}
+
+/* ==========================================================================
+   RÉSULTAT
+   ========================================================================== */
+
+function finishQuiz() {
+  const scoreBrut = Object.values(state.answers).reduce((sum, a) => sum + a.pts, 0);
+  // Conversion sur 10 : floor pour garantir que 10/10 = sans-faute uniquement (30/30)
+  const score = Math.floor((scoreBrut / 30) * 10);
+
+  let niveau, message, actions;
+
+  if (score <= 4) {
+    niveau = "Débutant";
+    message = "Tu démarres, c'est très bien. Le terrain est neuf, le potentiel est là. Je peux t'accompagner. Une formation, on en parle ?";
+    actions = `<a class="btn" href="${URL_FORMATIONS}" target="_blank" rel="noopener">Voir les formations IALS <span class="arrow">→</span></a>`;
+  } else if (score <= 9) {
+    niveau = "Intermédiaire";
+    message = "Tu connais le terrain. Tes prompts tiennent la route, ta curiosité est intacte. Je peux t'accompagner. On muscle ta pratique, on passe au niveau pro.";
+    actions = `<a class="btn" href="${URL_FORMATIONS}" target="_blank" rel="noopener">Voir les formations IALS <span class="arrow">→</span></a>`;
+  } else {
+    niveau = "Expert";
+    message = "Tu en sais plus que moi (ou presque). Tu es trop fort·e pour moi. Tu m'apprendras des choses. On se suit ?";
+    actions = `<a class="btn" href="${URL_LINKEDIN}" target="_blank" rel="noopener">Suivre Nathalie sur LinkedIn <span class="arrow">→</span></a>`;
+  }
+
+  document.getElementById('result-level').textContent = "Niveau " + niveau;
+  document.getElementById('result-score').textContent = score;
+  document.getElementById('result-msg').textContent = message;
+  document.getElementById('result-actions').innerHTML = actions;
+
+  goTo('result');
+
+  // Animation du score-fill après affichage
+  setTimeout(() => {
+    document.getElementById('score-fill').style.width = ((score / 10) * 100) + '%';
+  }, 100);
+
+  // Envoi au CRM
+  submitToCRM(score, scoreBrut, niveau);
+}
+
+/* ==========================================================================
+   SUBMIT WEBHOOK
+   ========================================================================== */
+
+async function submitToCRM(score, scoreBrut, niveau) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    source: "quicktestniveau",
+    prenom: state.lead.prenom,
+    email: state.lead.email,
+    profil: state.lead.profil, // "creatif" ou "non-creatif"
+    score: score,              // sur 10
+    score_max: 10,
+    score_brut: scoreBrut,     // sur 30 (utile pour analyse fine)
+    score_brut_max: 30,
+    niveau: niveau,
+    reponses: state.answers
+  };
+
+  if (!WEBHOOK_URL) {
+    console.log("[Quick Test IA] WEBHOOK_URL non configurée. Payload qui aurait été envoyé :", payload);
+    return;
+  }
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "no-cors" // Si le webhook ne renvoie pas les headers CORS, retire cette ligne quand c'est configuré.
+    });
+  } catch (err) {
+    console.error("[Quick Test IA] Envoi webhook échoué :", err);
+  }
+}
+
+/* ==========================================================================
+   RESTART
+   ========================================================================== */
+
+function restart() {
+  state.answers = {};
+  state.current = 0;
+  document.getElementById('score-fill').style.width = '0%';
+  goTo('intro');
+}
+</script>
+
+</body>
+</html>
