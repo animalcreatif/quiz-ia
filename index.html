@@ -963,12 +963,11 @@ async function submitToCRM(score, scoreBrut, niveau) {
   }
 
   try {
-    await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      mode: "no-cors" // Si le webhook ne renvoie pas les headers CORS, retire cette ligne quand c'est configuré.
-    });
+await fetch(WEBHOOK_URL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+});
   } catch (err) {
     console.error("[Quick Test IA] Envoi webhook échoué :", err);
   }
