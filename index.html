@@ -693,7 +693,7 @@ const questions = [
       { label: "Aucune idée.", pts: 0 },
       { label: "Une discipline avec ses méthodes (R.O.C.K.S.T.A.R., C.A.S.T.E.R., etc.).", pts: 3 },
       { label: "Une question posée à l'IA.", pts: 1 },
-      { label: "Une instruction structurée avec contexte, rôle, contraintes.", pts: 2 }
+      { label: "Une instruction structurée avec contexte, rôle, contraintes.", pts: 3 }
     ]
   },
   {
@@ -723,7 +723,7 @@ const questions = [
       { label: "Un prompt qui marche pas mal.", pts: 1 },
       { label: "Rien encore.", pts: 0 },
       { label: "Un workflow IA complet (Make, n8n, automation).", pts: 3 },
-      { label: "Un GPT custom, un projet Claude, un agent.", pts: 2 }
+      { label: "Un GPT custom, un projet Claude, un agent.", pts: 3 }
     ]
   },
   {
@@ -741,7 +741,7 @@ const questions = [
     title: "Si je dis « RAG », tu penses :",
     choices: [
       { label: "À un vêtement, mais moche !", pts: 0 },
-      { label: "Retrieval Augmented Generation, je vois.", pts: 2 },
+      { label: "Retrieval Augmented Generation, je vois.", pts: 3 },
       { label: "Aucune idée.", pts: 1 },
       { label: "J'en ai déjà monté un sur mes données.", pts: 3 }
     ]
@@ -909,15 +909,15 @@ function finishQuiz() {
   let niveau, message, actions;
 
   if (score <= 4) {
-    niveau = "Débutant";
+    niveau = "Niveau débutant";
     message = "Tu démarres, c'est très bien. Le terrain est neuf, le potentiel est là. Je peux t'accompagner. Une formation, on en parle ?";
     actions = `<a class="btn" href="${URL_FORMATIONS}" target="_blank" rel="noopener">Voir les formations IALS <span class="arrow">→</span></a>`;
-  } else if (score <= 9) {
-    niveau = "Intermédiaire";
+  } else if (score <= 8) {
+    niveau = "Niveau intermédiaire";
     message = "Tu connais le terrain. Tes prompts tiennent la route, ta curiosité est intacte. Je peux t'accompagner. On muscle ta pratique, on passe au niveau pro.";
     actions = `<a class="btn" href="${URL_FORMATIONS}" target="_blank" rel="noopener">Voir les formations IALS <span class="arrow">→</span></a>`;
   } else {
-    niveau = "Expert";
+    niveau = "Niveau expert";
     message = "Tu en sais plus que moi (ou presque). Tu es trop fort·e pour moi. Tu m'apprendras des choses. On se suit ?";
     actions = `<a class="btn" href="${URL_LINKEDIN}" target="_blank" rel="noopener">Suivre Nathalie sur LinkedIn <span class="arrow">→</span></a>`;
   }
