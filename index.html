@@ -663,6 +663,7 @@ body {
 // 👉 Colle ici l'URL de ton webhook Make ou n8n.
 // Tant que cette valeur est vide, les soumissions s'affichent en console pour test.
 const WEBHOOK_URL = "https://hook.eu1.make.com/fww2p6c15gw9iftfg2i7pcbfdll11qmv";
+const WEBHOOK_SECRET = "ta_chaine_aleatoire_ici";
 
 // 👉 URL de la page d'accueil IALS pour le CTA formations
 const URL_FORMATIONS = "https://www.nathaliedupuy.com/";
@@ -944,6 +945,7 @@ function finishQuiz() {
 
 async function submitToCRM(score, scoreBrut, niveau) {
   const payload = {
+   secret: WEBHOOK_SECRET,
     timestamp: new Date().toISOString(),
     source: "quicktestniveau",
     prenom: state.lead.prenom,
